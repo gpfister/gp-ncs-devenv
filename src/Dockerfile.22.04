@@ -1,0 +1,56 @@
+#
+# gp-ncs-devenv
+# Copyright (c) 2023-2024, Greg PFISTER. MIT License.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+
+FROM ghcr.io/gp-devenv/gp-base-devenv:22.04-1
+
+LABEL org.opencontainers.image.source=https://github.com/gp-devenv/gp-ncs-devenv
+LABEL org.opencontainers.image.description="Node dev container for VS Code running Ubuntu 22.04"
+LABEL org.opencontainers.image.licenses=MIT
+
+# Versions
+ARG NODE_VERSION="20"
+
+USER root
+
+# Update all
+RUN apt-get update && \
+    apt-get full-upgrade -y && \
+    apt-get autoremove -y && \
+    apt-get autoclean
+
+# Install node
+RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - && \
+    apt-get install -y nodejs && \
+    apt-get autoclean -y && \
+    apt-get autoremove -y
+
+# Add chromium
+RUN add-apt-repository ppa:saiarcot895/chromium-dev && \ 
+    apt-get update && \
+    apt-get install -y chromium-browser
+RUN echo '' >> /etc/zsh/zshenv && \
+    echo '# Set CHROME_BIN' >> /etc/zsh/zshenv && \
+    echo 'export CHROME_BIN=/usr/bin/chromium-browser' >> /etc/zsh/zshenv
+RUN ln -s /usr/bin/chromium-browser /usr/bin/chromium
+
+# Update NPM
+# RUN npm i -g npm@latest
+
+# Adding NVM
+COPY dist/etc/gp-devenv/zshrc.d /etc/gp-devenv/zshrc.d/
+
+EXPOSE 80
+
+ENTRYPOINT ["sudo", "/entrypoint.sh"]
+
+# End
